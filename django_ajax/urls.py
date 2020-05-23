@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
+from my_github.views import indexView, postRepo, checkRepoName
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', indexView),
+    path('post/ajax/friend', postRepo, name = "post_repo"),
+    path('get/ajax/validate/reponame', checkRepoName, name = "validate_reponame")
+
 ]

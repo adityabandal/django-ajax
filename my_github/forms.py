@@ -5,7 +5,7 @@ import datetime
 class RepoForm(forms.ModelForm):
     created_on = forms.DateField(
         label="When was this repository created?",
-        widget=forms.SelectDateWidget(years=range(1980, datetime.date.today().year-5))
+        widget=forms.SelectDateWidget(years=range(1980, datetime.date.today().year+1))
     )
 
     def __init__(self, *args, **kwargs):

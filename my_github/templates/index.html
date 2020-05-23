@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <form id="repo-form">
+        <div class="row">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group col-4">
+                <label class="col-12">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+            <input type="submit" class="btn btn-primary" value="Create Repository" />
+        </div>
+    <form>
+</div>
+<hr />
+
+<div class="container-fluid">
+    <table class="table table-striped table-sm" id="my_repos">
+        <thead>
+            <tr>
+                <th>Repository Name</th>
+                <th>Description</th>
+                <th>Languages</th>
+                <th>#forks</th>
+                <th>Created On</th>
+                <th>Collaborators</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for repo in repos %}
+        <tr>
+            <td>{{repo.repo_name}}</td>
+            <td>{{repo.repo_description}}</td>
+            <td>{{repo.rep_lang}}</td>
+            <td>{{repo.forks}}</td>
+            <td>{{repo.created_on | date:"Y-m-d"}}</td>
+            <td>{{repo.collaborators}}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock content %}
+{% block javascript %}
+<script>
+$(document).ready(function () {
+    /*
+        On submiting the form, send the POST ajax
+        request to server and after successfull submission
+        display the object.
+    */
+    $("#repo-form").submit(function (e) {
+        // preventing from page reload and default actions
+        e.preventDefault();
+        // serialize the data for sending the form data.
+        var serializedData = $(this).serialize();
+        // make POST ajax call
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'post_repo' %}",
+            data: serializedData,
+            success: function (response) {
+                // on successfull creating object
+                // 1. clear the form.
+                $("#repo-form").trigger('reset');
+                // 2. focus to nickname input 
+                $("#id_nick_name").focus();
+
+                // display the newly repo to table.
+                var instance = JSON.parse(response["instance"]);
+                var fields = instance[0]["fields"];
+                $("#my_repos tbody").prepend(
+                    `<tr>
+                    <td>${fields["repo_name"]||""}</td>
+                    <td>${fields["repo_description"]||""}</td>
+                    <td>${fields["rep_lang"]||""}</td>
+                    <td>${fields["forks"]||""}</td>
+                    <td>${fields["created_on"]||""}</td>
+                    <td>${fields["collaborators"]||""}</td>
+                    </tr>`
+                )
+            },
+            error: function (response) {
+                // alert the error if any error occured
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+        
+    })
+    $("#id_repo_name").focusout(function (e) {
+        
+        e.preventDefault();
+        // get the reponame
+        var repo_name = $(this).val();
+        // GET AJAX request
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'validate_reponame' %}",
+            data: {"repo_name": repo_name},
+            success: function (response) {
+                // if not valid user, alert the user
+                if(!response["valid"]){
+                    alert("You cannot create a Repository with same name");
+                    var repoName = $("#id_repo_name");
+                    repoName.val("")
+                    repoName.focus()
+                }
+            },
+            error: function (response) {
+                console.log(response)
+            }
+        })
+    })
+})
+</script>
+{% endblock javascript %}
